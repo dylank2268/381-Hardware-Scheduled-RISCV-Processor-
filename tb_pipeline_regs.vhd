@@ -1,129 +1,16 @@
 -- Dylan Kramer and Michael Berg
 -- Testbench for Pipeline Registers
+-- Made with the assistance of Claude 
 -- Tests: Data propagation through all stages, continuous insertion, individual stall/flush
 library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
+use work.RISCV_types.all;
 
-entity tb_pipeline_regs is
-end tb_pipeline_regs;
+entity pipeline_regs_tb is
+end pipeline_regs_tb;
 
-architecture behavior of tb_pipeline_regs is
-  
-  -- Component declarations
-  component IF_ID_reg is
-    port(
-      i_CLK         : in  std_logic;
-      i_RST         : in  std_logic;
-      i_pc          : in  std_logic_vector(31 downto 0);
-      i_pc_plus4    : in  std_logic_vector(31 downto 0);
-      i_instruction : in  std_logic_vector(31 downto 0);
-      o_pc          : out std_logic_vector(31 downto 0);
-      o_pc_plus4    : out std_logic_vector(31 downto 0);
-      o_instruction : out std_logic_vector(31 downto 0)
-    );
-  end component;
-  
-  component ID_EX_reg is
-    port(
-      i_CLK         : in  std_logic;
-      i_RST         : in  std_logic;
-      i_alu_op      : in  std_logic_vector(3 downto 0);
-      i_alu_src     : in  std_logic;
-      i_mem_write   : in  std_logic;
-      i_mem_read    : in  std_logic;
-      i_reg_write   : in  std_logic;
-      i_wb_sel      : in  std_logic_vector(1 downto 0);
-      i_branch      : in  std_logic;
-      i_jump        : in  std_logic;
-      i_ld_byte     : in  std_logic;
-      i_ld_half     : in  std_logic;
-      i_ld_unsigned : in  std_logic;
-      i_halt        : in  std_logic;
-      i_rs1_val     : in  std_logic_vector(31 downto 0);
-      i_rs2_val     : in  std_logic_vector(31 downto 0);
-      i_imm         : in  std_logic_vector(31 downto 0);
-      i_pc          : in  std_logic_vector(31 downto 0);
-      i_pc_plus4    : in  std_logic_vector(31 downto 0);
-      i_rs1_addr    : in  std_logic_vector(4 downto 0);
-      i_rs2_addr    : in  std_logic_vector(4 downto 0);
-      i_rd_addr     : in  std_logic_vector(4 downto 0);
-      o_alu_op      : out std_logic_vector(3 downto 0);
-      o_alu_src     : out std_logic;
-      o_mem_write   : out std_logic;
-      o_mem_read    : out std_logic;
-      o_reg_write   : out std_logic;
-      o_wb_sel      : out std_logic_vector(1 downto 0);
-      o_branch      : out std_logic;
-      o_jump        : out std_logic;
-      o_ld_byte     : out std_logic;
-      o_ld_half     : out std_logic;
-      o_ld_unsigned : out std_logic;
-      o_halt        : out std_logic;
-      o_rs1_val     : out std_logic_vector(31 downto 0);
-      o_rs2_val     : out std_logic_vector(31 downto 0);
-      o_imm         : out std_logic_vector(31 downto 0);
-      o_pc          : out std_logic_vector(31 downto 0);
-      o_pc_plus4    : out std_logic_vector(31 downto 0);
-      o_rs1_addr    : out std_logic_vector(4 downto 0);
-      o_rs2_addr    : out std_logic_vector(4 downto 0);
-      o_rd_addr     : out std_logic_vector(4 downto 0)
-    );
-  end component;
-  
-  component EX_MEM_reg is
-    port(
-      i_CLK         : in  std_logic;
-      i_RST         : in  std_logic;
-      i_mem_write   : in  std_logic;
-      i_mem_read    : in  std_logic;
-      i_reg_write   : in  std_logic;
-      i_wb_sel      : in  std_logic_vector(1 downto 0);
-      i_ld_byte     : in  std_logic;
-      i_ld_half     : in  std_logic;
-      i_ld_unsigned : in  std_logic;
-      i_halt        : in  std_logic;
-      i_alu_result  : in  std_logic_vector(31 downto 0);
-      i_rs2_val     : in  std_logic_vector(31 downto 0);
-      i_pc_plus4    : in  std_logic_vector(31 downto 0);
-      i_rd_addr     : in  std_logic_vector(4 downto 0);
-      i_overflow    : in  std_logic;
-      o_mem_write   : out std_logic;
-      o_mem_read    : out std_logic;
-      o_reg_write   : out std_logic;
-      o_wb_sel      : out std_logic_vector(1 downto 0);
-      o_ld_byte     : out std_logic;
-      o_ld_half     : out std_logic;
-      o_ld_unsigned : out std_logic;
-      o_halt        : out std_logic;
-      o_alu_result  : out std_logic_vector(31 downto 0);
-      o_rs2_val     : out std_logic_vector(31 downto 0);
-      o_pc_plus4    : out std_logic_vector(31 downto 0);
-      o_rd_addr     : out std_logic_vector(4 downto 0);
-      o_overflow    : out std_logic
-    );
-  end component;
-  
-  component MEM_WB_reg is
-    port(
-      i_CLK         : in  std_logic;
-      i_RST         : in  std_logic;
-      i_reg_write   : in  std_logic;
-      i_wb_sel      : in  std_logic_vector(1 downto 0);
-      i_halt        : in  std_logic;
-      i_alu_result  : in  std_logic_vector(31 downto 0);
-      i_mem_data    : in  std_logic_vector(31 downto 0);
-      i_pc_plus4    : in  std_logic_vector(31 downto 0);
-      i_rd_addr     : in  std_logic_vector(4 downto 0);
-      o_reg_write   : out std_logic;
-      o_wb_sel      : out std_logic_vector(1 downto 0);
-      o_halt        : out std_logic;
-      o_alu_result  : out std_logic_vector(31 downto 0);
-      o_mem_data    : out std_logic_vector(31 downto 0);
-      o_pc_plus4    : out std_logic_vector(31 downto 0);
-      o_rd_addr     : out std_logic_vector(4 downto 0)
-    );
-  end component;
+architecture behavior of pipeline_regs_tb is
   
   -- Clock and reset signals
   signal s_CLK : std_logic := '0';
@@ -131,6 +18,12 @@ architecture behavior of tb_pipeline_regs is
   signal s_RST_IDEX : std_logic := '0';
   signal s_RST_EXMEM : std_logic := '0';
   signal s_RST_MEMWB : std_logic := '0';
+  
+  -- Stall and flush signals
+  signal s_STALL_IFID : std_logic := '0';
+  signal s_FLUSH_IFID : std_logic := '0';
+  signal s_FLUSH_IDEX : std_logic := '0';
+  signal s_FLUSH_EXMEM : std_logic := '0';
   
   -- IF/ID signals
   signal s_ifid_i_pc          : std_logic_vector(31 downto 0) := (others => '0');
@@ -140,89 +33,33 @@ architecture behavior of tb_pipeline_regs is
   signal s_ifid_o_pc_plus4    : std_logic_vector(31 downto 0);
   signal s_ifid_o_instruction : std_logic_vector(31 downto 0);
   
-  -- ID/EX signals
-  signal s_idex_i_alu_op      : std_logic_vector(3 downto 0) := (others => '0');
-  signal s_idex_i_alu_src     : std_logic := '0';
-  signal s_idex_i_mem_write   : std_logic := '0';
-  signal s_idex_i_mem_read    : std_logic := '0';
+  -- ID/EX signals (minimal set for testing)
   signal s_idex_i_reg_write   : std_logic := '0';
-  signal s_idex_i_wb_sel      : std_logic_vector(1 downto 0) := (others => '0');
-  signal s_idex_i_branch      : std_logic := '0';
-  signal s_idex_i_jump        : std_logic := '0';
-  signal s_idex_i_ld_byte     : std_logic := '0';
-  signal s_idex_i_ld_half     : std_logic := '0';
-  signal s_idex_i_ld_unsigned : std_logic := '0';
-  signal s_idex_i_halt        : std_logic := '0';
-  signal s_idex_i_rs1_val     : std_logic_vector(31 downto 0) := (others => '0');
-  signal s_idex_i_rs2_val     : std_logic_vector(31 downto 0) := (others => '0');
-  signal s_idex_i_imm         : std_logic_vector(31 downto 0) := (others => '0');
   signal s_idex_i_pc          : std_logic_vector(31 downto 0) := (others => '0');
   signal s_idex_i_pc_plus4    : std_logic_vector(31 downto 0) := (others => '0');
-  signal s_idex_i_rs1_addr    : std_logic_vector(4 downto 0) := (others => '0');
-  signal s_idex_i_rs2_addr    : std_logic_vector(4 downto 0) := (others => '0');
   signal s_idex_i_rd_addr     : std_logic_vector(4 downto 0) := (others => '0');
-  signal s_idex_o_alu_op      : std_logic_vector(3 downto 0);
-  signal s_idex_o_alu_src     : std_logic;
-  signal s_idex_o_mem_write   : std_logic;
-  signal s_idex_o_mem_read    : std_logic;
   signal s_idex_o_reg_write   : std_logic;
-  signal s_idex_o_wb_sel      : std_logic_vector(1 downto 0);
-  signal s_idex_o_branch      : std_logic;
-  signal s_idex_o_jump        : std_logic;
-  signal s_idex_o_ld_byte     : std_logic;
-  signal s_idex_o_ld_half     : std_logic;
-  signal s_idex_o_ld_unsigned : std_logic;
-  signal s_idex_o_halt        : std_logic;
-  signal s_idex_o_rs1_val     : std_logic_vector(31 downto 0);
-  signal s_idex_o_rs2_val     : std_logic_vector(31 downto 0);
-  signal s_idex_o_imm         : std_logic_vector(31 downto 0);
   signal s_idex_o_pc          : std_logic_vector(31 downto 0);
   signal s_idex_o_pc_plus4    : std_logic_vector(31 downto 0);
-  signal s_idex_o_rs1_addr    : std_logic_vector(4 downto 0);
-  signal s_idex_o_rs2_addr    : std_logic_vector(4 downto 0);
   signal s_idex_o_rd_addr     : std_logic_vector(4 downto 0);
   
   -- EX/MEM signals
-  signal s_exmem_i_mem_write   : std_logic := '0';
-  signal s_exmem_i_mem_read    : std_logic := '0';
   signal s_exmem_i_reg_write   : std_logic := '0';
-  signal s_exmem_i_wb_sel      : std_logic_vector(1 downto 0) := (others => '0');
-  signal s_exmem_i_ld_byte     : std_logic := '0';
-  signal s_exmem_i_ld_half     : std_logic := '0';
-  signal s_exmem_i_ld_unsigned : std_logic := '0';
-  signal s_exmem_i_halt        : std_logic := '0';
   signal s_exmem_i_alu_result  : std_logic_vector(31 downto 0) := (others => '0');
-  signal s_exmem_i_rs2_val     : std_logic_vector(31 downto 0) := (others => '0');
   signal s_exmem_i_pc_plus4    : std_logic_vector(31 downto 0) := (others => '0');
   signal s_exmem_i_rd_addr     : std_logic_vector(4 downto 0) := (others => '0');
-  signal s_exmem_i_overflow    : std_logic := '0';
-  signal s_exmem_o_mem_write   : std_logic;
-  signal s_exmem_o_mem_read    : std_logic;
   signal s_exmem_o_reg_write   : std_logic;
-  signal s_exmem_o_wb_sel      : std_logic_vector(1 downto 0);
-  signal s_exmem_o_ld_byte     : std_logic;
-  signal s_exmem_o_ld_half     : std_logic;
-  signal s_exmem_o_ld_unsigned : std_logic;
-  signal s_exmem_o_halt        : std_logic;
   signal s_exmem_o_alu_result  : std_logic_vector(31 downto 0);
-  signal s_exmem_o_rs2_val     : std_logic_vector(31 downto 0);
   signal s_exmem_o_pc_plus4    : std_logic_vector(31 downto 0);
   signal s_exmem_o_rd_addr     : std_logic_vector(4 downto 0);
-  signal s_exmem_o_overflow    : std_logic;
   
   -- MEM/WB signals
   signal s_memwb_i_reg_write   : std_logic := '0';
-  signal s_memwb_i_wb_sel      : std_logic_vector(1 downto 0) := (others => '0');
-  signal s_memwb_i_halt        : std_logic := '0';
   signal s_memwb_i_alu_result  : std_logic_vector(31 downto 0) := (others => '0');
-  signal s_memwb_i_mem_data    : std_logic_vector(31 downto 0) := (others => '0');
   signal s_memwb_i_pc_plus4    : std_logic_vector(31 downto 0) := (others => '0');
   signal s_memwb_i_rd_addr     : std_logic_vector(4 downto 0) := (others => '0');
   signal s_memwb_o_reg_write   : std_logic;
-  signal s_memwb_o_wb_sel      : std_logic_vector(1 downto 0);
-  signal s_memwb_o_halt        : std_logic;
   signal s_memwb_o_alu_result  : std_logic_vector(31 downto 0);
-  signal s_memwb_o_mem_data    : std_logic_vector(31 downto 0);
   signal s_memwb_o_pc_plus4    : std_logic_vector(31 downto 0);
   signal s_memwb_o_rd_addr     : std_logic_vector(4 downto 0);
   
@@ -231,11 +68,13 @@ architecture behavior of tb_pipeline_regs is
   
 begin
 
-  -- Instantiate IF/ID register
-  IFID: IF_ID_reg
+  -- Instantiate IF/ID register using direct entity instantiation
+  IFID: entity work.IF_ID_reg
     port map(
       i_CLK         => s_CLK,
       i_RST         => s_RST_IFID,
+      i_stall       => s_STALL_IFID,
+      i_flush       => s_FLUSH_IFID,
       i_pc          => s_ifid_i_pc,
       i_pc_plus4    => s_ifid_i_pc_plus4,
       i_instruction => s_ifid_i_instruction,
@@ -244,105 +83,125 @@ begin
       o_instruction => s_ifid_o_instruction
     );
   
-  -- Instantiate ID/EX register
-  IDEX: ID_EX_reg
+  -- Instantiate ID/EX register with minimal signals
+  IDEX: entity work.ID_EX_reg
     port map(
       i_CLK         => s_CLK,
       i_RST         => s_RST_IDEX,
-      i_alu_op      => s_idex_i_alu_op,
-      i_alu_src     => s_idex_i_alu_src,
-      i_mem_write   => s_idex_i_mem_write,
-      i_mem_read    => s_idex_i_mem_read,
+      i_flush       => s_FLUSH_IDEX,
+      i_alu_src     => '0',
+      i_alu_ctrl    => "0000",
+      i_mem_write   => '0',
+      i_mem_read    => '0',
       i_reg_write   => s_idex_i_reg_write,
-      i_wb_sel      => s_idex_i_wb_sel,
-      i_branch      => s_idex_i_branch,
-      i_jump        => s_idex_i_jump,
-      i_ld_byte     => s_idex_i_ld_byte,
-      i_ld_half     => s_idex_i_ld_half,
-      i_ld_unsigned => s_idex_i_ld_unsigned,
-      i_halt        => s_idex_i_halt,
-      i_rs1_val     => s_idex_i_rs1_val,
-      i_rs2_val     => s_idex_i_rs2_val,
-      i_imm         => s_idex_i_imm,
+      i_wb_sel      => "00",
+      i_ld_byte     => '0',
+      i_ld_half     => '0',
+      i_ld_unsigned => '0',
+      i_a_sel       => "00",
+      i_halt        => '0',
+      i_branch      => '0',
+      i_pc_src      => "00",
+      i_check_overflow => '0',
       i_pc          => s_idex_i_pc,
       i_pc_plus4    => s_idex_i_pc_plus4,
-      i_rs1_addr    => s_idex_i_rs1_addr,
-      i_rs2_addr    => s_idex_i_rs2_addr,
+      i_rs1_val     => (others => '0'),
+      i_rs2_val     => (others => '0'),
+      i_imm         => (others => '0'),
+      i_immB        => (others => '0'),
+      i_immJ        => (others => '0'),
+      i_shift_amt   => "00000",
       i_rd_addr     => s_idex_i_rd_addr,
-      o_alu_op      => s_idex_o_alu_op,
-      o_alu_src     => s_idex_o_alu_src,
-      o_mem_write   => s_idex_o_mem_write,
-      o_mem_read    => s_idex_o_mem_read,
+      i_rs1_addr    => "00000",
+      i_rs2_addr    => "00000",
+      i_funct3      => "000",
+      o_alu_src     => open,
+      o_alu_ctrl    => open,
+      o_mem_write   => open,
+      o_mem_read    => open,
       o_reg_write   => s_idex_o_reg_write,
-      o_wb_sel      => s_idex_o_wb_sel,
-      o_branch      => s_idex_o_branch,
-      o_jump        => s_idex_o_jump,
-      o_ld_byte     => s_idex_o_ld_byte,
-      o_ld_half     => s_idex_o_ld_half,
-      o_ld_unsigned => s_idex_o_ld_unsigned,
-      o_halt        => s_idex_o_halt,
-      o_rs1_val     => s_idex_o_rs1_val,
-      o_rs2_val     => s_idex_o_rs2_val,
-      o_imm         => s_idex_o_imm,
+      o_wb_sel      => open,
+      o_ld_byte     => open,
+      o_ld_half     => open,
+      o_ld_unsigned => open,
+      o_a_sel       => open,
+      o_halt        => open,
+      o_branch      => open,
+      o_pc_src      => open,
+      o_check_overflow => open,
       o_pc          => s_idex_o_pc,
       o_pc_plus4    => s_idex_o_pc_plus4,
-      o_rs1_addr    => s_idex_o_rs1_addr,
-      o_rs2_addr    => s_idex_o_rs2_addr,
-      o_rd_addr     => s_idex_o_rd_addr
+      o_rs1_val     => open,
+      o_rs2_val     => open,
+      o_imm         => open,
+      o_immB        => open,
+      o_immJ        => open,
+      o_shift_amt   => open,
+      o_rd_addr     => s_idex_o_rd_addr,
+      o_rs1_addr    => open,
+      o_rs2_addr    => open,
+      o_funct3      => open
     );
   
   -- Instantiate EX/MEM register
-  EXMEM: EX_MEM_reg
+  EXMEM: entity work.EX_MEM_reg
     port map(
       i_CLK         => s_CLK,
       i_RST         => s_RST_EXMEM,
-      i_mem_write   => s_exmem_i_mem_write,
-      i_mem_read    => s_exmem_i_mem_read,
+      i_flush       => s_FLUSH_EXMEM,
+      i_mem_write   => '0',
+      i_mem_read    => '0',
       i_reg_write   => s_exmem_i_reg_write,
-      i_wb_sel      => s_exmem_i_wb_sel,
-      i_ld_byte     => s_exmem_i_ld_byte,
-      i_ld_half     => s_exmem_i_ld_half,
-      i_ld_unsigned => s_exmem_i_ld_unsigned,
-      i_halt        => s_exmem_i_halt,
+      i_wb_sel      => "00",
+      i_ld_byte     => '0',
+      i_ld_half     => '0',
+      i_ld_unsigned => '0',
+      i_halt        => '0',
       i_alu_result  => s_exmem_i_alu_result,
-      i_rs2_val     => s_exmem_i_rs2_val,
+      i_rs2_val     => (others => '0'),
       i_pc_plus4    => s_exmem_i_pc_plus4,
       i_rd_addr     => s_exmem_i_rd_addr,
-      i_overflow    => s_exmem_i_overflow,
-      o_mem_write   => s_exmem_o_mem_write,
-      o_mem_read    => s_exmem_o_mem_read,
+      i_overflow    => '0',
+      i_check_overflow => '0',
+      o_mem_write   => open,
+      o_mem_read    => open,
       o_reg_write   => s_exmem_o_reg_write,
-      o_wb_sel      => s_exmem_o_wb_sel,
-      o_ld_byte     => s_exmem_o_ld_byte,
-      o_ld_half     => s_exmem_o_ld_half,
-      o_ld_unsigned => s_exmem_o_ld_unsigned,
-      o_halt        => s_exmem_o_halt,
+      o_wb_sel      => open,
+      o_ld_byte     => open,
+      o_ld_half     => open,
+      o_ld_unsigned => open,
+      o_halt        => open,
       o_alu_result  => s_exmem_o_alu_result,
-      o_rs2_val     => s_exmem_o_rs2_val,
+      o_rs2_val     => open,
       o_pc_plus4    => s_exmem_o_pc_plus4,
       o_rd_addr     => s_exmem_o_rd_addr,
-      o_overflow    => s_exmem_o_overflow
+      o_overflow    => open,
+      o_check_overflow => open
     );
   
   -- Instantiate MEM/WB register
-  MEMWB: MEM_WB_reg
+  MEMWB: entity work.MEM_WB_reg
     port map(
       i_CLK         => s_CLK,
       i_RST         => s_RST_MEMWB,
       i_reg_write   => s_memwb_i_reg_write,
-      i_wb_sel      => s_memwb_i_wb_sel,
-      i_halt        => s_memwb_i_halt,
+      i_wb_sel      => "00",
+      i_halt        => '0',
       i_alu_result  => s_memwb_i_alu_result,
-      i_mem_data    => s_memwb_i_mem_data,
+      i_mem_data    => (others => '0'),
       i_pc_plus4    => s_memwb_i_pc_plus4,
       i_rd_addr     => s_memwb_i_rd_addr,
+      i_overflow    => '0',
+      i_check_overflow => '0',
       o_reg_write   => s_memwb_o_reg_write,
-      o_wb_sel      => s_memwb_o_wb_sel,
-      o_halt        => s_memwb_o_halt,
+      o_wb_sel      => open,
+      o_halt        => open,
       o_alu_result  => s_memwb_o_alu_result,
-      o_mem_data    => s_memwb_o_mem_data,
+      o_mem_data    => open,
       o_pc_plus4    => s_memwb_o_pc_plus4,
-      o_rd_addr     => s_memwb_o_rd_addr
+      o_rd_addr     => s_memwb_o_rd_addr,
+      o_overflow    => open,
+      o_check_overflow => open
     );
   
   -- Clock generation
@@ -358,7 +217,6 @@ begin
   TEST_PROCESS: process
   begin
     -- TEST 1: Initial reset and basic propagation through pipeline
-    -- Reset all registers
     s_RST_IFID <= '1';
     s_RST_IDEX <= '1';
     s_RST_EXMEM <= '1';
@@ -375,11 +233,8 @@ begin
     s_ifid_i_pc <= x"DEADBEEF";
     s_ifid_i_pc_plus4 <= x"DEADBEF3";
     s_ifid_i_instruction <= x"DEADB000";
-    
-    -- Also set up ID/EX inputs with marker
     s_idex_i_reg_write <= '1';
     s_idex_i_rd_addr <= "10101";
-    s_idex_i_rs1_val <= x"11111111";
     
     wait for CLK_PERIOD; -- Cycle 1: Data in IF/ID
     
@@ -398,7 +253,7 @@ begin
     s_exmem_i_reg_write <= s_idex_o_reg_write;
     s_exmem_i_rd_addr <= s_idex_o_rd_addr;
     s_exmem_i_pc_plus4 <= s_idex_o_pc_plus4;
-    s_exmem_i_alu_result <= x"DEADBEEF"; -- Use PC as marker
+    s_exmem_i_alu_result <= x"DEADBEEF";
     
     -- Feed IF/ID to ID/EX (second value)
     s_idex_i_pc <= s_ifid_o_pc;
@@ -415,24 +270,16 @@ begin
     s_memwb_i_rd_addr <= s_exmem_o_rd_addr;
     s_memwb_i_pc_plus4 <= s_exmem_o_pc_plus4;
     s_memwb_i_alu_result <= s_exmem_o_alu_result;
-    s_memwb_i_mem_data <= x"12345678";
     
     -- Continue feeding pipeline
     s_exmem_i_pc_plus4 <= s_idex_o_pc_plus4;
-    s_exmem_i_alu_result <= s_idex_o_pc; -- Use PC as marker
+    s_exmem_i_alu_result <= s_idex_o_pc;
     s_idex_i_pc <= s_ifid_o_pc;
     s_idex_i_pc_plus4 <= s_ifid_o_pc_plus4;
     
     wait for CLK_PERIOD; -- Cycle 4: Original data in MEM/WB
     
-    -- TEST 2: Continuous insertion - verify all 3 values in pipeline
-    -- At this point we should have:
-    -- MEM/WB: DEADBEEF (cycle 4)
-    -- EX/MEM: CAFEBABE (cycle 3)
-    -- ID/EX: BAADF00D (cycle 2)
-    
-    -- TEST 3: Flush individual stages
-    -- Feed more data
+    -- TEST 2: Continuous insertion - all 3 values present
     s_memwb_i_alu_result <= s_exmem_o_alu_result;
     s_exmem_i_alu_result <= s_idex_o_pc;
     s_idex_i_pc <= s_ifid_o_pc;
@@ -441,21 +288,20 @@ begin
     wait for CLK_PERIOD;
     
     -- TEST 3a: Flush only ID/EX stage
-    s_RST_IDEX <= '1';
+    s_FLUSH_IDEX <= '1';
     wait for CLK_PERIOD;
-    s_RST_IDEX <= '0';
+    s_FLUSH_IDEX <= '0';
     
     -- TEST 3b: Flush only EX/MEM stage
-    -- Setup known data
     s_exmem_i_alu_result <= x"FEEDFACE";
     s_exmem_i_reg_write <= '1';
     wait for CLK_PERIOD;
     
-    s_RST_EXMEM <= '1';
+    s_FLUSH_EXMEM <= '1';
     wait for CLK_PERIOD;
-    s_RST_EXMEM <= '0';
+    s_FLUSH_EXMEM <= '0';
     
-    -- TEST 3c: Flush only MEM/WB stage
+    -- TEST 3c: Flush only MEM/WB stage using reset
     s_memwb_i_alu_result <= x"FACADE00";
     s_memwb_i_reg_write <= '1';
     wait for CLK_PERIOD;
@@ -468,28 +314,41 @@ begin
     s_ifid_i_pc <= x"ABCD1234";
     wait for CLK_PERIOD;
     
-    s_RST_IFID <= '1';
+    s_FLUSH_IFID <= '1';
     wait for CLK_PERIOD;
-    s_RST_IFID <= '0';
+    s_FLUSH_IFID <= '0';
     
-    -- TEST 4: Simultaneous flush of multiple stages
-    -- Setup data in all stages
+    -- TEST 4: Stall functionality
+    s_ifid_i_pc <= x"5AA11001";
+    s_ifid_i_pc_plus4 <= x"5AA11005";
+    wait for CLK_PERIOD;
+    
+    -- Stall IF/ID for 2 cycles
+    s_STALL_IFID <= '1';
+    s_ifid_i_pc <= x"5AA11002";
+    wait for CLK_PERIOD;
+    
+    s_ifid_i_pc <= x"5AA11003";
+    wait for CLK_PERIOD;
+    
+    s_STALL_IFID <= '0';
+    s_ifid_i_pc <= x"5AA11004";
+    wait for CLK_PERIOD;
+    
+    -- TEST 5: Simultaneous flush
     s_ifid_i_pc <= x"11111111";
-    s_idex_i_rs1_val <= x"22222222";
     s_exmem_i_alu_result <= x"33333333";
     s_memwb_i_alu_result <= x"44444444";
     
     wait for CLK_PERIOD;
     
-    -- Flush IF/ID and EX/MEM simultaneously
-    s_RST_IFID <= '1';
-    s_RST_EXMEM <= '1';
+    s_FLUSH_IFID <= '1';
+    s_FLUSH_EXMEM <= '1';
     wait for CLK_PERIOD;
-    s_RST_IFID <= '0';
-    s_RST_EXMEM <= '0';
+    s_FLUSH_IFID <= '0';
+    s_FLUSH_EXMEM <= '0';
     
-    -- TEST 5: Data integrity through normal operation after flush
-    -- Reset all
+    -- TEST 6: Sequential operation
     s_RST_IFID <= '1';
     s_RST_IDEX <= '1';
     s_RST_EXMEM <= '1';
@@ -501,12 +360,10 @@ begin
     s_RST_EXMEM <= '0';
     s_RST_MEMWB <= '0';
     
-    -- Insert sequential values
     for i in 1 to 8 loop
       s_ifid_i_pc <= std_logic_vector(to_unsigned(i * 100, 32));
       s_ifid_i_pc_plus4 <= std_logic_vector(to_unsigned(i * 100 + 4, 32));
       
-      -- Feed pipeline
       if i >= 2 then
         s_idex_i_pc <= s_ifid_o_pc;
         s_idex_i_pc_plus4 <= s_ifid_o_pc_plus4;
