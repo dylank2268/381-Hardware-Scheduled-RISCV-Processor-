@@ -1,7 +1,8 @@
+--Dylan Kramer
 -- Pipeline Register: EX/MEM
--- Stores control signals and ALU results between Execute and Memory stages
 library IEEE;
 use IEEE.std_logic_1164.all;
+use work.RISCV_types.all;
 
 entity EX_MEM_reg is
   port(
@@ -119,7 +120,7 @@ begin
     port map(i_CLK => i_CLK, i_RST => i_RST, i_WE => '1',
              i_D => i_rd_addr, o_Q => o_rd_addr);
 
-  -- Data signals (32-bit)
+  -- Data signals
   ALU_RESULT_REG: dffg_N
     generic map(N => 32)
     port map(i_CLK => i_CLK, i_RST => i_RST, i_WE => '1',

@@ -121,88 +121,87 @@ signal s_ShiftAmt_ID    : std_logic_vector(4 downto 0);
 signal s_IF_ID_pc : std_logic_vector(31 downto 0);
 signal s_IF_IDPC_Plus4 : std_logic_vector(31 downto 0);
 signal s_IF_ID_Inst : std_logic_vector(31 downto 0);
+
+--decode stage signals
+signal s_ID_RegWr : std_logic;
+signal s_ID_Halt  : std_logic;
+
 --ID/EX pipeline signals
-  -- Control outputs from ID/EX register
-  signal s_ID_EX_ALU_SRC     : std_logic;
-  signal s_ID_EX_ALU_CTRL    : std_logic_vector(3 downto 0);
-  signal s_ID_EX_MEM_WRITE   : std_logic;
-  signal s_ID_EX_MEM_READ    : std_logic;
-  signal s_ID_EX_REG_WRITE   : std_logic;
-  signal s_ID_EX_WB_SEL      : std_logic_vector(1 downto 0);
-  signal s_ID_EX_LD_BYTE     : std_logic;
-  signal s_ID_EX_LD_HALF     : std_logic;
-  signal s_ID_EX_LD_UNSIGNED : std_logic;
-  signal s_ID_EX_ASEL       : std_logic_vector(1 downto 0);
-  signal s_ID_EX_HALT        : std_logic;
-  signal s_ID_EX_BRANCH     : std_logic;
-  signal s_ID_EX_PC_SRC     : std_logic_vector(1 downto 0);
-  signal s_ID_EX_CHECK_OVERFLOW : std_logic;
+-- Control outputs from ID/EX register
+signal s_ID_EX_ALU_SRC     : std_logic;
+signal s_ID_EX_ALU_CTRL    : std_logic_vector(3 downto 0);
+signal s_ID_EX_MEM_WRITE   : std_logic;
+signal s_ID_EX_MEM_READ    : std_logic;
+signal s_ID_EX_REG_WRITE   : std_logic;
+signal s_ID_EX_WB_SEL      : std_logic_vector(1 downto 0);
+signal s_ID_EX_LD_BYTE     : std_logic;
+signal s_ID_EX_LD_HALF     : std_logic;
+signal s_ID_EX_LD_UNSIGNED : std_logic;
+signal s_ID_EX_ASEL       : std_logic_vector(1 downto 0);
+signal s_ID_EX_HALT        : std_logic;
+signal s_ID_EX_BRANCH     : std_logic;
+signal s_ID_EX_PC_SRC     : std_logic_vector(1 downto 0);
+signal s_ID_EX_CHECK_OVERFLOW : std_logic;
 
-  -----------
-  --decode stage signals
-  ----------
-  signal s_ID_RegWr : std_logic;
-  signal s_ID_Halt  : std_logic;
+-- Data outputs from ID/EX register
+signal s_ID_EX_PC          : std_logic_vector(31 downto 0);
+signal s_ID_EX_PC_PLUS4    : std_logic_vector(31 downto 0);
+signal s_ID_EX_RS1_VAL     : std_logic_vector(31 downto 0);
+signal s_ID_EX_RS2_VAL     : std_logic_vector(31 downto 0);
+signal s_ID_EX_IMMI         : std_logic_vector(31 downto 0);
+signal s_ID_EX_IMMB       : std_logic_vector(31 downto 0);
+signal s_ID_EX_IMMJ       : std_logic_vector(31 downto 0);
+signal s_ID_EX_SHIFT_AMT   : std_logic_vector(4 downto 0);
+signal s_ID_EX_RD_ADDR     : std_logic_vector(4 downto 0);
+signal s_ID_EX_RS1_ADDR    : std_logic_vector(4 downto 0);
+signal s_ID_EX_RS2_ADDR    : std_logic_vector(4 downto 0);signal s_ID_EX_FUNCT3      : std_logic_vector(2 downto 0);
 
-  -- Data outputs from ID/EX register
-  signal s_ID_EX_PC          : std_logic_vector(31 downto 0);
-  signal s_ID_EX_PC_PLUS4    : std_logic_vector(31 downto 0);
-  signal s_ID_EX_RS1_VAL     : std_logic_vector(31 downto 0);
-  signal s_ID_EX_RS2_VAL     : std_logic_vector(31 downto 0);
-  signal s_ID_EX_IMMI         : std_logic_vector(31 downto 0);
-  signal s_ID_EX_IMMB       : std_logic_vector(31 downto 0);
-  signal s_ID_EX_IMMJ       : std_logic_vector(31 downto 0);
-  signal s_ID_EX_SHIFT_AMT   : std_logic_vector(4 downto 0);
-  signal s_ID_EX_RD_ADDR     : std_logic_vector(4 downto 0);
-  signal s_ID_EX_RS1_ADDR    : std_logic_vector(4 downto 0);
-  signal s_ID_EX_RS2_ADDR    : std_logic_vector(4 downto 0);
-  signal s_ID_EX_FUNCT3      : std_logic_vector(2 downto 0);
+--Execute stage shift calculation signal
+signal s_ShiftAmt_EX       : std_logic_vector(4 downto 0);
 
-  --Execute stage shift calculation signal
-  signal s_ShiftAmt_EX       : std_logic_vector(4 downto 0);
 --EX/MEM pipeline signals
-  -- Control outputs from EX/MEM register
-  signal s_EX_MEM_MEM_WRITE   : std_logic;
-  signal s_EX_MEM_MEM_READ    : std_logic;
-  signal s_EX_MEM_REG_WRITE   : std_logic;
-  signal s_EX_MEM_WB_SEL      : std_logic_vector(1 downto 0);
-  signal s_EX_MEM_LD_BYTE     : std_logic;
-  signal s_EX_MEM_LD_HALF     : std_logic;
-  signal s_EX_MEM_LD_UNSIGNED : std_logic;
-  signal s_EX_MEM_HALT        : std_logic;
-  signal s_EX_MEM_CHECK_OVERFLOW : std_logic;
-  -- Data outputs from EX/MEM register
-  signal s_EX_MEM_ALU_RESULT  : std_logic_vector(31 downto 0);
-  signal s_EX_MEM_RS2_VAL     : std_logic_vector(31 downto 0);
-  signal s_EX_MEM_PC_PLUS4    : std_logic_vector(31 downto 0);
-  signal s_EX_MEM_RD_ADDR     : std_logic_vector(4 downto 0);
-  signal s_EX_MEM_OVERFLOW    : std_logic;
+-- Control outputs from EX/MEM register
+signal s_EX_MEM_MEM_WRITE   : std_logic;
+signal s_EX_MEM_MEM_READ    : std_logic;
+signal s_EX_MEM_REG_WRITE   : std_logic;
+signal s_EX_MEM_WB_SEL      : std_logic_vector(1 downto 0);
+signal s_EX_MEM_LD_BYTE     : std_logic;
+signal s_EX_MEM_LD_HALF     : std_logic;
+signal s_EX_MEM_LD_UNSIGNED : std_logic;
+signal s_EX_MEM_HALT        : std_logic;
+signal s_EX_MEM_CHECK_OVERFLOW : std_logic;
+-- Data outputs from EX/MEM register
+signal s_EX_MEM_ALU_RESULT  : std_logic_vector(31 downto 0);
+signal s_EX_MEM_RS2_VAL     : std_logic_vector(31 downto 0);
+signal s_EX_MEM_PC_PLUS4    : std_logic_vector(31 downto 0);
+signal s_EX_MEM_RD_ADDR     : std_logic_vector(4 downto 0);
+signal s_EX_MEM_OVERFLOW    : std_logic;
  
-  --MEM/WB signals
-  -- Control outputs from MEM/WB register
-  signal s_MEM_WB_REG_WRITE   : std_logic;
-  signal s_MEM_WB_WB_SEL      : std_logic_vector(1 downto 0);
-  signal s_MEM_WB_HALT        : std_logic;
-  signal s_MEM_WB_CHECK_OVERFLOW : std_logic;
-  -- Data outputs from MEM/WB register
-  signal s_MEM_WB_ALU_RESULT  : std_logic_vector(31 downto 0);
-  signal s_MEM_WB_MEM_DATA    : std_logic_vector(31 downto 0);
-  signal s_MEM_WB_PC_PLUS4    : std_logic_vector(31 downto 0);
-  signal s_MEM_WB_RD_ADDR     : std_logic_vector(4 downto 0);
-  signal s_MEM_WB_OVERFLOW    : std_logic;
+--MEM/WB signals
+-- Control outputs from MEM/WB register
+signal s_MEM_WB_REG_WRITE   : std_logic;
+signal s_MEM_WB_WB_SEL      : std_logic_vector(1 downto 0);
+signal s_MEM_WB_HALT        : std_logic;
+signal s_MEM_WB_CHECK_OVERFLOW : std_logic;
+-- Data outputs from MEM/WB register
+signal s_MEM_WB_ALU_RESULT  : std_logic_vector(31 downto 0);
+signal s_MEM_WB_MEM_DATA    : std_logic_vector(31 downto 0);
+signal s_MEM_WB_PC_PLUS4    : std_logic_vector(31 downto 0);
+signal s_MEM_WB_RD_ADDR     : std_logic_vector(4 downto 0);
+signal s_MEM_WB_OVERFLOW    : std_logic;
 
-  --Hazard detection signals
-  signal s_STALL_IF : std_logic;
-  signal s_STALL_IF_ID : std_logic;
-  signal s_FLUSH_IF_ID : std_logic;
-  signal s_FLUSH_ID_EX : std_logic;
-  signal s_FLUSH_EX_MEM : std_logic;
+--Hazard detection signals
+signal s_STALL_IF : std_logic;
+signal s_STALL_IF_ID : std_logic;
+signal s_FLUSH_IF_ID : std_logic;
+signal s_FLUSH_ID_EX : std_logic;
+signal s_FLUSH_EX_MEM : std_logic;
 
-  --Forwarding signals
-  signal s_ForwardA : std_logic_vector(1 downto 0);
-  signal s_ForwardB : std_logic_vector(1 downto 0);
-  signal s_ALUInA_Forwarded : std_logic_vector(31 downto 0);
-  signal s_ALUInB_Forwarded : std_logic_vector(31 downto 0);  
+--Forwarding signals
+signal s_ForwardA : std_logic_vector(1 downto 0);
+signal s_ForwardB : std_logic_vector(1 downto 0);
+signal s_ALUInA_Forwarded : std_logic_vector(31 downto 0);
+signal s_ALUInB_Forwarded : std_logic_vector(31 downto 0);  
 
 --Control unit instantiation
   component ControlUnit is
@@ -676,7 +675,6 @@ REGFILE: reg
     port map(
       i_CLK         => iCLK,
       i_RST         => iRST,
-      -- Control inputs
       i_flush      => s_FLUSH_ID_EX,
       i_alu_src     => s_ALUSrcSel,
       i_alu_ctrl    => s_ALUCtrl,
@@ -690,7 +688,6 @@ REGFILE: reg
       i_a_sel       => s_ASel,
       i_halt        => s_ID_Halt,
       i_check_overflow => s_CheckOverflow,
-      -- Data inputs
       i_pc          => s_IF_ID_PC,
       i_pc_plus4    => s_IF_IDPC_Plus4,
       i_rs1_val     => s_rs1_val, --From reg 
@@ -704,7 +701,7 @@ REGFILE: reg
       i_rs2_addr    => s_rs2,
       i_funct3      => s_funct3,
       i_branch      => s_Branch, --FOR BRANCH SIGNAL
-      i_pc_src      => PCSrc, --Might be a problem?
+      i_pc_src      => PCSrc,
       o_alu_src     => s_ID_EX_ALU_SRC,
       o_alu_ctrl    => s_ID_EX_ALU_CTRL,
       o_mem_write   => s_ID_EX_MEM_WRITE,
@@ -756,9 +753,9 @@ REGFILE: reg
   generic map(N => 32)
   port map(
     i_S  => s_ForwardA,
-    i_D0 => s_ID_EX_RS1_VAL,                    -- No forwarding
-    i_D1 => s_EX_MEM_ALU_RESULT,         -- Forward from EX/MEM
-    i_D2 => s_WBData,                     -- Forward from MEM/WB
+    i_D0 => s_ID_EX_RS1_VAL,    -- No forwarding
+    i_D1 => s_EX_MEM_ALU_RESULT,-- Forward from EX/MEM
+    i_D2 => s_WBData,          -- Forward from MEM/WB
     i_D3 => (others => '0'),
     o_O  => s_ALUInA_Forwarded
   );
@@ -768,19 +765,19 @@ REGFILE: reg
   generic map(N => 32)
   port map(
     i_S  => s_ForwardB,
-    i_D0 => s_ID_EX_RS2_VAL,                    -- No forwarding
-    i_D1 => s_EX_MEM_ALU_RESULT,         -- Forward from EX/MEM
-    i_D2 => s_WBData,                     -- Forward from MEM/WB
+    i_D0 => s_ID_EX_RS2_VAL,   -- No forwarding
+    i_D1 => s_EX_MEM_ALU_RESULT, -- Forward from EX/MEM
+    i_D2 => s_WBData,       -- Forward from MEM/WB
     i_D3 => (others => '0'),
     o_O  => s_ALUInB_Forwarded
   );
 
    BRANCH_UNIT: branch_logic
   port map(
-    i_rs1      => s_ALUInA_Forwarded,        -- From register file (decode stage)
-    i_rs2      => s_ALUInB_Forwarded,        -- From register file (decode stage)
-    i_funct3   => s_ID_EX_FUNCT3,         -- From instruction decode
-    i_branch   => s_ID_EX_BRANCH,         -- From control unit
+    i_rs1      => s_ALUInA_Forwarded, -- From register file (decode stage)
+    i_rs2      => s_ALUInB_Forwarded, -- From register file (decode stage)
+    i_funct3   => s_ID_EX_FUNCT3,   -- From instruction decode
+    i_branch   => s_ID_EX_BRANCH,   -- From control unit
     o_br_taken => s_BranchTaken     -- Branch decision in decode stage
   );
 
@@ -798,8 +795,8 @@ MUX_ALU_B: mux2t1_N
   generic map(N => 32)
   port map(
     i_S  => s_ID_EX_ALU_SRC,  -- control: 0 = rs2, 1 = immI
-    i_D0 => s_ALUInB_Forwarded,    -- rs2 value (R-type)
-    i_D1 => s_ID_EX_IMMI,       -- immediate (I-type)
+    i_D0 => s_ALUInB_Forwarded,-- rs2 value (R-type)
+    i_D1 => s_ID_EX_IMMI,      -- immediate (I-type)
     o_O  => s_ALUInB      -- goes into ALU.B
   );
 
@@ -816,8 +813,6 @@ ALU0: ALUUnit
     Overflow  => s_ALUOvfl);
 
 
-
-
     ---------------
     --EX/MEM PIPELINE
     ---------------
@@ -825,7 +820,6 @@ ALU0: ALUUnit
     port map(
       i_CLK         => iCLK,
       i_RST         => iRST,
-      -- Control inputs
       i_mem_write   => s_ID_EX_MEM_WRITE,
       i_mem_read    => s_ID_EX_MEM_READ,
       i_reg_write   => s_ID_EX_REG_WRITE,
@@ -862,18 +856,18 @@ ALU0: ALUUnit
   --Load/store logic
   LSU: load_store_unit
   port map(
-    i_addr        => s_EX_MEM_ALU_RESULT,           -- Address from ALU
-    i_rs2_wdata   => s_EX_MEM_RS2_VAL,          -- Data to store (rs2 value)
-    i_mem_read    => s_EX_MEM_MEM_READ,          -- Load enable (from opcode decode)
-    i_mem_write   => s_EX_MEM_MEM_WRITE,         -- Store enable (from opcode decode)
-    i_ld_byte     => s_EX_MEM_LD_BYTE,           -- Load byte flag
-    i_ld_half     => s_EX_MEM_LD_HALF,           -- Load half flag
-    i_ld_unsigned => s_EX_MEM_LD_UNSIGNED,       -- Zero/sign extend flag
-    o_mem_addr    => s_DMemAddr,         -- Address to memory
-    o_mem_wdata   => s_DMemData,         -- Write data to memory
-    o_mem_we      => s_DMemWr,           -- Write enable to memory
-    i_mem_rdata   => s_DMemOut,          -- Read data from memory
-    o_load_data   => s_LoadedData        -- Load data for writeback
+    i_addr        => s_EX_MEM_ALU_RESULT,  -- Address from ALU
+    i_rs2_wdata   => s_EX_MEM_RS2_VAL,     -- Data to store (rs2 value)
+    i_mem_read    => s_EX_MEM_MEM_READ,    -- Load enable (from opcode decode)
+    i_mem_write   => s_EX_MEM_MEM_WRITE,   -- Store enable (from opcode decode)
+    i_ld_byte     => s_EX_MEM_LD_BYTE,     -- Load byte flag
+    i_ld_half     => s_EX_MEM_LD_HALF,     -- Load half flag
+    i_ld_unsigned => s_EX_MEM_LD_UNSIGNED, -- Zero/sign extend flag
+    o_mem_addr    => s_DMemAddr,           -- Address to memory
+    o_mem_wdata   => s_DMemData,           -- Write data to memory
+    o_mem_we      => s_DMemWr,             -- Write enable to memory
+    i_mem_rdata   => s_DMemOut,            -- Read data from memory
+    o_load_data   => s_LoadedData          -- Load data for writeback
   );
     -- MEM/WB Pipeline Register
   MEM_WB_PIPE: MEM_WB_reg

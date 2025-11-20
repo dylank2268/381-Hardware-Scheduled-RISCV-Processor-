@@ -19,8 +19,8 @@ end branch_logic;
 
 architecture behavioral of branch_logic is
   signal s_eq   : std_logic; --equals
-  signal s_lt   : std_logic;  -- signed less than
-  signal s_ltu  : std_logic;  -- unsigned less than
+  signal s_lt   : std_logic; --signed less than
+  signal s_ltu  : std_logic; --unsigned less than
   signal s_cond : std_logic;
 begin
   
