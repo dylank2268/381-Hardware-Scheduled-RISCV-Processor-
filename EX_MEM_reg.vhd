@@ -1,8 +1,7 @@
---Dylan Kramer
 -- Pipeline Register: EX/MEM
+-- Stores control signals and ALU results between Execute and Memory stages
 library IEEE;
 use IEEE.std_logic_1164.all;
-use work.RISCV_types.all;
 
 entity EX_MEM_reg is
   port(
@@ -16,13 +15,11 @@ entity EX_MEM_reg is
     i_ld_half     : in  std_logic;
     i_ld_unsigned : in  std_logic;
     i_halt        : in  std_logic;
-    i_flush       : in std_logic; 
     i_alu_result  : in  std_logic_vector(31 downto 0);
     i_rs2_val     : in  std_logic_vector(31 downto 0);
     i_pc_plus4    : in  std_logic_vector(31 downto 0);
     i_rd_addr     : in  std_logic_vector(4 downto 0);
     i_overflow    : in  std_logic;
-    i_check_overflow : in std_logic;
     o_mem_write   : out std_logic;
     o_mem_read    : out std_logic;
     o_reg_write   : out std_logic;
@@ -32,7 +29,6 @@ entity EX_MEM_reg is
     o_ld_unsigned : out std_logic;
     o_halt        : out std_logic;
     o_alu_result  : out std_logic_vector(31 downto 0);
-    o_check_overflow : out std_logic;
     o_rs2_val     : out std_logic_vector(31 downto 0);
     o_pc_plus4    : out std_logic_vector(31 downto 0);
     o_rd_addr     : out std_logic_vector(4 downto 0);
@@ -63,21 +59,9 @@ architecture structural of EX_MEM_reg is
     );
   end component;
   
-  signal s_mem_write_in   : std_logic;
-  signal s_mem_read_in    : std_logic;
-  signal s_reg_write_in   : std_logic;
-  signal s_halt_in        : std_logic;
-  signal s_check_overflow_in : std_logic;
-  
 begin
 
-  --Flush logic
-  s_mem_write_in   <= i_mem_write   when i_flush = '0' else '0';
-  s_mem_read_in    <= i_mem_read    when i_flush = '0' else '0';
-  s_reg_write_in   <= i_reg_write   when i_flush = '0' else '0';
-  s_halt_in        <= i_halt        when i_flush = '0' else '0';
-  s_check_overflow_in <= i_check_overflow when i_flush = '0' else '0';
-
+  -- Control signals
   MEM_WRITE_REG: dffg
     port map(i_CLK => i_CLK, i_RST => i_RST, i_WE => '1',
              i_D => i_mem_write, o_Q => o_mem_write);
@@ -109,7 +93,7 @@ begin
   OVERFLOW_REG: dffg
     port map(i_CLK => i_CLK, i_RST => i_RST, i_WE => '1',
              i_D => i_overflow, o_Q => o_overflow);
-   
+
   WB_SEL_REG: dffg_N
     generic map(N => 2)
     port map(i_CLK => i_CLK, i_RST => i_RST, i_WE => '1',
@@ -120,7 +104,7 @@ begin
     port map(i_CLK => i_CLK, i_RST => i_RST, i_WE => '1',
              i_D => i_rd_addr, o_Q => o_rd_addr);
 
-  -- Data signals
+  --Data signals
   ALU_RESULT_REG: dffg_N
     generic map(N => 32)
     port map(i_CLK => i_CLK, i_RST => i_RST, i_WE => '1',

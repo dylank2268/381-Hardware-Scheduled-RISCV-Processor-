@@ -2,7 +2,6 @@
 -- Stores control signals and data between Memory and Writeback stages
 library IEEE;
 use IEEE.std_logic_1164.all;
-use work.RISCV_types.all;
 
 entity MEM_WB_reg is
   port(
@@ -15,14 +14,10 @@ entity MEM_WB_reg is
     i_mem_data    : in  std_logic_vector(31 downto 0);
     i_pc_plus4    : in  std_logic_vector(31 downto 0);
     i_rd_addr     : in  std_logic_vector(4 downto 0);
-    i_overflow    : in std_logic;
-    i_check_overflow : in std_logic;
     o_reg_write   : out std_logic;
-    o_overflow    : out std_logic;
     o_wb_sel      : out std_logic_vector(1 downto 0);
     o_halt        : out std_logic;
     o_alu_result  : out std_logic_vector(31 downto 0);
-    o_check_overflow : out std_logic;
     o_mem_data    : out std_logic_vector(31 downto 0);
     o_pc_plus4    : out std_logic_vector(31 downto 0);
     o_rd_addr     : out std_logic_vector(4 downto 0)
@@ -54,7 +49,7 @@ architecture structural of MEM_WB_reg is
   
 begin
 
-  -- Control signals
+  --Control signals
   REG_WRITE_REG: dffg
     port map(i_CLK => i_CLK, i_RST => i_RST, i_WE => '1',
              i_D => i_reg_write, o_Q => o_reg_write);
@@ -62,15 +57,6 @@ begin
   HALT_REG: dffg
     port map(i_CLK => i_CLK, i_RST => i_RST, i_WE => '1',
              i_D => i_halt, o_Q => o_halt);
-
-  OVERFLOW_REG: dffg
-    port map(i_CLK => i_CLK, i_RST => i_RST, i_WE => '1',
-             i_D => i_overflow, o_Q => o_overflow);
-
-   CHECK_OVERFLOW_REG: dffg
-    port map(i_CLK => i_CLK, i_RST => i_RST, i_WE => '1',
-             i_D => i_check_overflow, o_Q => o_check_overflow);          
-
 
   WB_SEL_REG: dffg_N
     generic map(N => 2)
@@ -82,7 +68,7 @@ begin
     port map(i_CLK => i_CLK, i_RST => i_RST, i_WE => '1',
              i_D => i_rd_addr, o_Q => o_rd_addr);
 
-  -- Data signals
+  --Data signals
   ALU_RESULT_REG: dffg_N
     generic map(N => 32)
     port map(i_CLK => i_CLK, i_RST => i_RST, i_WE => '1',
